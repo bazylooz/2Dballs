@@ -1,12 +1,10 @@
-# Symulator fizyki 2D - własny silnik + macroquad
+# 2D Physics Simulator - Custom Engine + macroquad
 
-Natywna aplikacja w Rust z własnym (bez zewnętrznego silnika) silnikiem fizyki 2D.
-Odpowiada za grawitację, opór powietrza, tarcie toczące, kolizje ze ścianami oraz
-sprężyste zderzenia piłek z zachowaniem pędu i korekcją pozycji.
+A native Rust application featuring a custom-built 2D physics engine (with no external physics libraries). It handles gravity, air resistance, rolling friction, wall collisions, and elastic ball-to-ball collisions with momentum conservation and positional correction.
 
-## Uruchomienie
+## Running the Project
 
-Wymagany jest Rust (cargo); projekt zbudowano na wersji 1.100.
+Rust (cargo) is required; the project was built using version 1.100.
 
 ```bash
 cargo build --release
@@ -14,57 +12,48 @@ cargo build --release
 target\release\ball_physics_sim.exe    # Windows
 ```
 
-Wersja developerska (szybszy kompilowaniem, wolniejsza w działaniu):
+Development build (faster compilation, slower runtime performance):
 
 ```bash
 cargo run
 ```
 
-## Sterowanie
+## Controls
 
-| Akcja | Opis |
+| Action | Description |
 | --- | --- |
-| **LPM** (klik w puste miejsce) | Nowa piłka o losowym promieniu i kolorze |
-| **LPM** (przeciągnięcie) | Proca - linia celowania, podgląd trajektorii i wystrzał po puszczeniu |
-| **PPM** (przytrzymanie i ruch) | Chwycenie piłki i rzut z pędem zgodnym z ruchem myszy |
-| **E** | Eksplozja pod kursorem (animacja + impuls radialny) |
-| **Przycisk Eksplozja** | Uzbrojenie celu - kolejny klik LPM w planszę wysadzi w wybranym miejscu |
-| **Esc** / **PPM** | Anulowanie uzbrojonego celu |
-| **Spacja** | Pauza / wznowienie |
-| **R** | Reset planszy |
+| **LMB** (click empty space) | Spawns a new ball with a random radius and color |
+| **LMB** (drag) | Slingshot – aiming line, trajectory preview, and launch on release |
+| **RMB** (hold & move) | Grabs a ball and throws it with momentum matching mouse movement |
+| **E** | Triggers an explosion at the cursor (animation + radial impulse) |
+| **Explosion button** | Arms target mode – the next LMB click on the canvas detonates at that location |
+| **Esc** / **RMB** | Cancels armed explosion target |
+| **Space** | Pauses / resumes simulation |
+| **R** | Resets the board |
 
-## Panel sterowania (lewy górny róg)
+## Control Panel (Top-Left Corner)
 
-Suwaki:
+Sliders:
 
-- **Grawitacja** - 0 … 2000 px/s²
-- **Restytucja** - 0 … 1 (sprężystość odbić)
-- **Opór powietrza** - 0 … 2 1/s
-- **Skala czasu** - 0.1x … 2.0x (slow motion / przyspieszenie)
-- **Moc eksplozji** - 200 … 4000 (siła impulsu radialnego)
+- **Gravity** – 0 … 2000 px/s²
+- **Restitution** – 0 … 1 (bounciness)
+- **Air Drag** – 0 … 2 1/s
+- **Time Scale** – 0.1x … 2.0x (slow motion / fast-forward)
+- **Explosion Power** – 200 … 4000 (radial impulse strength)
 
-Przyciski: **Wyczysc**, **+20 pilek**, **Eksplozja** (uzbrojenie celu), **Wektory**
-(wektory prędkości), **Pauza**, **Zapisz**, **Domyslne**.
+Buttons: **Clear**, **+20 Balls**, **Explosion** (arms target), **Vectors** (velocity vectors), **Pause**, **Save**, **Defaults**.
 
-Ustawienia zapisywane są w pliku `physics_settings.txt` w katalogu roboczym
-(wczytywanie następuje automatycznie przy starcie). Przycisk **Domyslne**
-przywraca wartości początkowe i również je zapisuje. Po każdej akcji w panelu
-wyświetlany jest krótki komunikat (np. „Ustawienia zapisane").
+Settings are saved to `physics_settings.txt` in the working directory and loaded automatically on startup. Clicking **Defaults** restores the initial values and saves them as well. A brief status notification (e.g., *"Settings saved"*) appears after each panel action.
 
-W prawym górnym rogu wyświetlane są: FPS, liczba piłek i całkowita energia kinetyczna.
+The top-right corner displays FPS, ball count, and total kinetic energy.
 
-## Struktura kodu
+## Code Structure
 
-- `src/main.rs` - punkt wejścia, akumulator czasowy, wejście, sterowanie eksplozją, render
-- `src/ball.rs` - piłka, masa ∝ πr², ring buffer śladu, rysowanie
-- `src/physics.rs` - silnik fizyki: całkowanie, kolizje, siatka przestrzenna, impulsy
-- `src/effects.rs` - animacja eksplozji (pierścienie, błysk, promienie)
-- `src/settings.rs` - zapis/odczyt ustawień i wartości domyślne
-- `src/ui.rs` - własny HUD (suwaki, przyciski, statystyki)
+- `src/main.rs` – entry point, time accumulator, input handling, explosion controls, rendering
+- `src/ball.rs` – ball struct, mass ∝ πr², trail ring buffer, rendering
+- `src/physics.rs` – physics engine: integration, collisions, spatial grid, impulses
+- `src/effects.rs` – explosion animation (rings, flash, rays)
+- `src/settings.rs` – settings serialization/deserialization and default values
+- `src/ui.rs` – custom HUD (sliders, buttons, statistics)
 
-Fizyka działa ze stałym krokiem 120 Hz (akumulator z limitem 16 podkroków na klatkę),
-więc wynik nie zależy od aktualnego FPS. Animacja eksplozji odtwarzana jest w czasie
-rzeczywistym, niezależnie od skali czasu symulacji.
-
-Etykiety w HUDzie są zapisane bez polskich znaków diakrytycznych, ponieważ domyślny
-font macroquad nie gwarantuje ich renderowania.
+The physics simulation runs at a fixed 120 Hz timestep (using an accumulator capped at 16 substeps per frame), ensuring deterministic behavior independent of the current FPS. Explosion animations play in real time regardless of the simulation's time scale.
